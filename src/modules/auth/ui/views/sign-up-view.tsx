@@ -18,9 +18,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { OctagonAlertIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { FaGoogle, FaGithub } from "react-icons/fa";
+
 const formSchema = z
   .object({
     name: z.string().min(1, { message: "Name is required" }),
@@ -34,6 +37,7 @@ const formSchema = z
     path: ["confirmPassword"],
     message: "Passwords do not match",
   });
+
 const SignUpView = () => {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -55,11 +59,31 @@ const SignUpView = () => {
         email: data.email,
         password: data.password,
         name: data.name,
+        callbackURL: "/",
       },
       {
         onSuccess: () => {
           setPending(false);
           router.push("/");
+        },
+        onError: ({ error }) => {
+          setError(error.message);
+          setPending(false);
+        },
+      }
+    );
+  };
+  const onSocial = (provider: "github" | "google") => {
+    setError(null);
+    setPending(true);
+    authClient.signIn.social(
+      {
+        provider: provider,
+        callbackURL: "/",
+      },
+      {
+        onSuccess: () => {
+          setPending(false);
         },
         onError: ({ error }) => {
           setError(error.message);
@@ -159,7 +183,7 @@ const SignUpView = () => {
                   </Alert>
                 )}
                 <Button type="submit" className="w-full" disabled={pending}>
-                  Sign in
+                  Sign Up
                 </Button>
                 <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t ">
                   <span className="bg-card text-muted-foreground relative z-10 px-2">
@@ -168,20 +192,26 @@ const SignUpView = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Button
+                    onClick={() => {
+                      onSocial("google");
+                    }}
                     variant="outline"
                     type="button"
                     className="w-full"
                     disabled={pending}
                   >
-                    Google
+                    <FaGoogle />
                   </Button>
                   <Button
+                    onClick={() => {
+                      onSocial("github");
+                    }}
                     variant="outline"
                     type="button"
                     className="w-full"
                     disabled={pending}
                   >
-                    Github
+                    <FaGithub />
                   </Button>
                 </div>
                 <div className="text-sm text-center">
